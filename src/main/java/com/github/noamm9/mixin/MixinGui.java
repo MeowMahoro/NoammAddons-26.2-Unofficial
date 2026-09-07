@@ -10,11 +10,12 @@ import com.github.noamm9.features.impl.misc.Tweaks;
 import com.github.noamm9.features.impl.visual.DarkMode;
 import com.github.noamm9.features.impl.visual.PlayerHud;
 import com.github.noamm9.features.impl.visual.Scoreboard;
+import com.github.noamm9.ui.notification.NotificationManager;
 import com.github.noamm9.utils.location.LocationUtils;
 import net.minecraft.client.DeltaTracker;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.Gui;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
+import net.minecraft.client.gui.Hud;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
@@ -27,7 +28,7 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.ModifyVariable;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-@Mixin(Gui.class)
+@Mixin(Hud.class)
 public abstract class MixinGui {
     @Shadow
     @Final
@@ -75,13 +76,18 @@ public abstract class MixinGui {
         }
     }
 
-    @Inject(method = "extractRenderState", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/Gui;extractSleepOverlay(Lnet/minecraft/client/gui/GuiGraphicsExtractor;Lnet/minecraft/client/DeltaTracker;)V"))
+    @Inject(method = "extractRenderState", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/Hud;extractSleepOverlay(Lnet/minecraft/client/gui/GuiGraphicsExtractor;Lnet/minecraft/client/DeltaTracker;)V"))
     public void onRenderHud(GuiGraphicsExtractor graphics, DeltaTracker deltaTracker, CallbackInfo ci) {
-        if (this.minecraft.options.hideGui) return;
+        if (this.minecraft.gui.hud.isHidden()) return;
         if (this.minecraft.debugEntries.isOverlayVisible()) return;
         EventBus.post(new RenderOverlayEvent(graphics));
 
         DebugHUD.render(graphics);
+    }
+
+    @Inject(method = "extractRenderState", at = @At(value = "TAIL"))
+    public void onRenderHudPostExtract(GuiGraphicsExtractor graphics, DeltaTracker deltaTracker, CallbackInfo ci) {
+        if (this.minecraft.gui.screen() == null) NotificationManager.render(graphics);
     }
 
     @Inject(method = "extractRenderState", at = @At(value = "HEAD"))

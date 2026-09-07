@@ -51,7 +51,7 @@ object AuctionPriceInput: Feature("Replaces the sign input with a proper textbox
 
             if (lines[1] == "^^^^^^^^^^^^^^^" && lines[2] == "Your auction" && lines[3] == "starting bid") mc.execute {
                 // manually setting the screen so the sign gui wont close
-                mc.screen = AuctionInputScreen(sign, lines, stack).apply { init(width, height) }
+                mc.gui.setScreen(AuctionInputScreen(sign, lines, stack).apply { init(width, height) })
             }
         }
 
@@ -72,7 +72,7 @@ object AuctionPriceInput: Feature("Replaces the sign input with a proper textbox
             }
 
             val stack = event.screen.menu.slots.getOrNull(slotId)?.item ?: return@register
-            if (! stack.`is`(Blocks.GREEN_TERRACOTTA.asItem())) return@register
+            if (! stack.`is`(Blocks.DYED_TERRACOTTA.green().asItem())) return@register
             if (! isValidName(stack.hoverName.unformattedText)) return@register
 
             GuiUtils.clickSlot(slotId, GuiUtils.ButtonType.LEFT)

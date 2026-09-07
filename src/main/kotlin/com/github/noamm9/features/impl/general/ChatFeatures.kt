@@ -13,6 +13,7 @@ import com.github.noamm9.interfaces.IChatComponent
 import com.github.noamm9.ui.notification.NotificationManager
 import com.github.noamm9.utils.*
 import com.github.noamm9.utils.ChatUtils.removeFormatting
+import com.github.noamm9.utils.ChatUtils.toLegacyFormatCode
 import com.github.noamm9.utils.ChatUtils.unformattedText
 import com.mojang.brigadier.arguments.StringArgumentType
 import gg.essential.universal.UKeyboard
@@ -149,8 +150,8 @@ object ChatFeatures: Feature(jsonName = "Chat", description = "Useful tweaks for
             line.content().accept { _, style, codePoint ->
                 if (style != lastStyle) {
                     style.color?.let { textColor ->
-                        ChatFormatting.entries.firstOrNull { it.isColor && it.color == textColor.value }?.let {
-                            builder.append(it)
+                        textColor.toLegacyFormatCode()?.let { code ->
+                            builder.append(ChatFormatting.PREFIX_CODE).append(code)
                         }
                     }
 

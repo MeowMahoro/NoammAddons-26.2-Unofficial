@@ -139,17 +139,23 @@ object ChatUtils: ISelfInit {
 
     val Component.unformattedText get() = string.removeFormatting()
     val Component.formattedText get() = formatted(this)
+    private val legacyColorToFormatChar = mapOf(
+        0x000000 to '0', 0x0000AA to '1', 0x00AA00 to '2', 0x00AAAA to '3',
+        0xAA0000 to '4', 0xAA00AA to '5', 0xFFAA00 to '6', 0xAAAAAA to '7',
+        0x555555 to '8', 0x5555FF to '9', 0x55FF55 to 'a', 0x55FFFF to 'b',
+        0xFF5555 to 'c', 0xFF55FF to 'd', 0xFFFF55 to 'e', 0xFFFFFF to 'f'
+    )
+
+    /** Returns the legacy section-sign code for [TextColor] if it is one of the 16 standard chat colors. */
+    fun TextColor.toLegacyFormatCode(): Char? = legacyColorToFormatChar[value]
+
     private val formatted = fun(comp: Component): String {
         val sb = StringBuilder()
 
         comp.visit({ style, string ->
             style.color?.let { textColor ->
-                val colorMatch = ChatFormatting.entries.firstOrNull {
-                    it.isColor && it.color == textColor.value
-                }
-
-                if (colorMatch != null) {
-                    sb.append("§${colorMatch.char}")
+                textColor.toLegacyFormatCode()?.let { code ->
+                    sb.append(ChatFormatting.PREFIX_CODE).append(code)
                 }
             }
 

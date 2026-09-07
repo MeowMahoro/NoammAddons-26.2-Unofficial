@@ -1,20 +1,13 @@
 package com.github.noamm9.utils.render.world
 
-import com.github.noamm9.NoammAddons.mc
 import com.github.noamm9.utils.render.world.batches.FilledBatch
 import com.github.noamm9.utils.render.world.batches.LineBatch
 import com.github.noamm9.utils.render.world.batches.TextRenderState
-import com.mojang.blaze3d.vertex.DefaultVertexFormat
-import com.mojang.blaze3d.vertex.Tesselator
 import gg.essential.universal.UGraphics
 import gg.essential.universal.UMatrixStack
-import gg.essential.universal.UMinecraft
 import gg.essential.universal.render.URenderPipeline
 import gg.essential.universal.vertex.UBufferBuilder
 import gg.essential.universal.vertex.UBuiltBuffer
-import gg.essential.universal.vertex.UVertexConsumer
-import net.minecraft.client.gui.Font
-import net.minecraft.util.LightCoordsUtil
 import org.joml.Matrix4f
 import org.joml.Vector3f
 
@@ -44,22 +37,11 @@ object RenderBatcher {
         val pendingLines = lineBatches.values.toList().also { lineBatches.clear() }
         val pendingTexts = texts.toList().also { texts.clear() }
 
-        if (pendingTexts.isNotEmpty()) {
-            val consumers = mc.renderBuffers().bufferSource()
-            for (text in pendingTexts) UMinecraft.getFontRenderer().drawInBatch(
-                text.text,
-                text.xOff,
-                text.yOff,
-                text.argb,
-                true,
-                text.matrix,
-                consumers,
-                if (text.seeThrough) Font.DisplayMode.SEE_THROUGH else Font.DisplayMode.NORMAL,
-                0,
-                LightCoordsUtil.FULL_BRIGHT
-            )
-            consumers.endBatch()
-        }
+        // TODO(26.2): World text & wide-line rendering needs porting onto the new submit-node feature
+        // renderer pipeline (FeatureRenderer + FeatureRendererRegistry). Kept out of this pass so the
+        // data collection/cleanup still happens; rendering comes back once the pipeline port lands.
+        if (pendingTexts.isNotEmpty()) Unit
+        if (pendingLines.isNotEmpty()) Unit
 
         for (batchData in pendingFills) {
             val builder = UBufferBuilder.create(batchData.mode, UGraphics.CommonVertexFormats.POSITION_COLOR)
@@ -71,22 +53,6 @@ object RenderBatcher {
             }
 
             builder.build()?.drawAndClose(batchData.pipeline) { noScissor() }
-        }
-
-        for (batchData in pendingLines) {
-            val mcBuffer = Tesselator.getInstance().begin(UGraphics.DrawMode.LINES.mcMode,
-                DefaultVertexFormat.POSITION_COLOR_NORMAL_LINE_WIDTH)
-            val uc = UVertexConsumer.of(mcBuffer)
-
-            for (state in batchData.data) {
-                uc.pos(UMatrixStack.UNIT, state.x, state.y, state.z)
-                uc.color(state.r, state.g, state.b, state.a)
-                uc.norm(UMatrixStack.UNIT, state.nx, state.ny, state.nz)
-                mcBuffer.setLineWidth(state.lineWidth)
-                uc.endVertex()
-            }
-
-            mcBuffer.build()?.let(UBuiltBuffer::wrap)?.drawAndClose(batchData.pipeline) { noScissor() }
         }
     }
 
