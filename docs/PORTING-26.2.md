@@ -127,6 +127,8 @@ Items.DYED_TERRACOTTA.lime()          // 陶瓦 Item 版
 ### 3.4 渲染器字段/方法改名
 - `GameRenderer` 内字段改为私有，用访问器：`gameRenderer.gameRenderState()`、`.featureRenderDispatcher()`、`.lighting()`。
 - `LevelRenderer.allChanged()` → `resetLevelRenderData()`。
+  - ⚠️ 26.2 中 `resetLevelRenderData()` **只销毁不重建**：把 `viewArea` 置空、dispose 掉 `sectionRenderDispatcher` 后直接返回。若在已进入世界时调用，下一帧 `render() → repositionCamera()` 就会因 `viewArea == null` 直接 NPE（崩溃日志形如 `Cannot invoke ViewArea.repositionCamera(...) because this.viewArea is null`）。
+  - 需要"运行时重建区块渲染数据"（改方块剔除/材质等）时改走 `invalidateCompiledGeometry(level, options, gameRenderer.mainCamera(), blockColors)`，它会重建 `ViewArea` 并重定位相机——封装见 `ModCompatibility.refreshLevelRenderer()`（`v0.3` 修复）。`resetLevelRenderData()` 只适合退出/关服等随后必然重建的场景。
 - `ItemInHandRenderer`：`renderArmWithItem`→`submitArmWithItem`，`renderHandsWithItems`→`submitHandsWithItems`；签名普遍带 `SubmitNodeCollector`。
 - `ScreenEffectRenderer`：旧 `renderFire/renderWater` 移除；新为私有静态 `submitFire(PoseStack,SubmitNodeCollector,TextureAtlasSprite)` 与 `submitWater(Minecraft,PoseStack,SubmitNodeCollector)`；遮罩注入改到这两个方法（见 `MixinScreenEffectRenderer`）。`getViewBlockingState` 仍在但已是 private。
 - `BlockPos.center` 没了 → 用 `Vec3.atCenterOf(pos)`。

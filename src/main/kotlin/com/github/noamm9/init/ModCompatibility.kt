@@ -19,7 +19,26 @@ object ModCompatibility {
         val blockStateCulling = config?.javaClass?.getDeclaredField("useBlockStateCulling")
         blockStateCulling?.isAccessible = true
         blockStateCulling?.setBoolean(config, false)
-        mc.levelRenderer.resetLevelRenderData()
+        refreshLevelRenderer()
+    }
+
+    /**
+     * 26.2 渲染管线下重建区块渲染数据的入口。
+     *
+     * 注意：不能直接调 levelRenderer.resetLevelRenderData() —— 该方法只会把 viewArea 置空并销毁
+     * sectionRenderDispatcher，并不重建。在世界已加载的情况下调用，下一帧 render -> repositionCamera
+     * 会因 viewArea == null 直接 NPE（26.1.2 及更早的渲染实现不受此影响）。
+     * 需要刷新区块渲染时应走 invalidateCompiledGeometry(...)，它会重建 ViewArea、编译器并重定位相机，
+     * 等价于"修改渲染距离/资源重载"时 vanilla 所做的重建。
+     */
+    fun refreshLevelRenderer() {
+        val level = mc.level ?: return
+        mc.levelRenderer.invalidateCompiledGeometry(
+            level,
+            mc.options,
+            mc.gameRenderer.mainCamera(),
+            mc.blockColors
+        )
     }
 
     const val bobby_chunk = "de.johni0702.minecraft.bobby.FakeChunk"
