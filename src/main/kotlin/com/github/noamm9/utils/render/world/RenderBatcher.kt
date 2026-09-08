@@ -3,11 +3,10 @@ package com.github.noamm9.utils.render.world
 import com.github.noamm9.utils.render.world.batches.FilledBatch
 import com.github.noamm9.utils.render.world.batches.LineBatch
 import com.github.noamm9.utils.render.world.batches.TextRenderState
+import com.github.noamm9.utils.render.world.feature.NoammFeatureRenderers
 import gg.essential.universal.UGraphics
-import gg.essential.universal.UMatrixStack
 import gg.essential.universal.render.URenderPipeline
-import gg.essential.universal.vertex.UBufferBuilder
-import gg.essential.universal.vertex.UBuiltBuffer
+import net.fabricmc.fabric.api.client.rendering.v1.level.LevelRenderContext
 import org.joml.Matrix4f
 import org.joml.Vector3f
 
@@ -30,29 +29,42 @@ object RenderBatcher {
         texts.add(TextRenderState(Matrix4f(matrix), text, xOff, yOff, argb, seeThrough))
     }
 
-    internal fun flush() {
+    /**
+     * Called at the end of level submit collection. Data was recorded during [RenderWorldEvent]
+     * dispatch; we hand pending geometry to the feature-renderer pipeline here.
+     *
+     * TODO(26.2): filled geometry + world text still need their own feature renderers (vanilla
+     * exposes POSITION_COLOR QUADS/TRIANGLE_FAN pipelines and TEXT pipelines, but vertex layout is
+     * quad-based, so fills require re-batching to 4-vertex quads first).
+     */
+    internal fun flush(ctx: LevelRenderContext) {
         if (filledBatches.isEmpty() && lineBatches.isEmpty() && texts.isEmpty()) return
 
         val pendingFills = filledBatches.values.toList().also { filledBatches.clear() }
-        val pendingLines = lineBatches.values.toList().also { lineBatches.clear() }
-        val pendingTexts = texts.toList().also { texts.clear() }
-
-        // TODO(26.2): World text & wide-line rendering needs porting onto the new submit-node feature
-        // renderer pipeline (FeatureRenderer + FeatureRendererRegistry). Kept out of this pass so the
-        // data collection/cleanup still happens; rendering comes back once the pipeline port lands.
-        if (pendingTexts.isNotEmpty()) Unit
-        if (pendingLines.isNotEmpty()) Unit
-
-        for (batchData in pendingFills) {
-            val builder = UBufferBuilder.create(batchData.mode, UGraphics.CommonVertexFormats.POSITION_COLOR)
-
-            for (state in batchData.data) {
-                builder.pos(UMatrixStack.UNIT, state.x, state.y, state.z)
-                builder.color(state.r, state.g, state.b, state.a)
-                builder.endVertex()
+        if (pendingFills.isNotEmpty()) {
+            val submits = pendingFills.mapNotNull { batchData ->
+                val throughWalls = when (batchData.pipeline) {
+                    NoammRenderPipelines.FILLED,
+                    NoammRenderPipelines.CIRCLE_FILLED -> false
+                    NoammRenderPipelines.FILLED_THROUGH_WALLS,
+                    NoammRenderPipelines.CIRCLE_FILLED_THROUGH_WALLS -> true
+                    else -> null
+                } ?: return@mapNotNull null
+                throughWalls to batchData.data
             }
+            NoammFeatureRenderers.submitFills(ctx, submits)
+        }
 
-            builder.build()?.drawAndClose(batchData.pipeline) { noScissor() }
+        val pendingTexts = texts.toList().also { texts.clear() }
+        if (pendingTexts.isNotEmpty()) NoammFeatureRenderers.submitTexts(ctx, pendingTexts)
+
+        val pendingLines = lineBatches.values.toList().also { lineBatches.clear() }
+        if (pendingLines.isNotEmpty()) {
+            val submits = pendingLines.map { batchData ->
+                val throughWalls = batchData.pipeline == NoammRenderPipelines.LINES_THROUGH_WALLS
+                throughWalls to batchData.data
+            }
+            NoammFeatureRenderers.submitLines(ctx, submits)
         }
     }
 

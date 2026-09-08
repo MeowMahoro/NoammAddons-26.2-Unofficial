@@ -13,7 +13,7 @@ import net.minecraft.resources.Identifier
 import java.util.*
 
 object NoammRenderPipelines: ISelfInit {
-    private val MC_FILLED = RenderPipelines.register(
+    internal val MC_FILLED = RenderPipelines.register(
         RenderPipeline.builder(RenderPipelines.DEBUG_FILLED_SNIPPET).apply {
             withLocation(id("pipeline/filled"))
             withVertexBinding(0, DefaultVertexFormat.POSITION_COLOR)
@@ -21,7 +21,7 @@ object NoammRenderPipelines: ISelfInit {
         }.build()
     )
 
-    private val MC_FILLED_THROUGH_WALLS = RenderPipelines.register(
+    internal val MC_FILLED_THROUGH_WALLS = RenderPipelines.register(
         RenderPipeline.builder(RenderPipelines.DEBUG_FILLED_SNIPPET).apply {
             withLocation(id("pipeline/filled_through_walls"))
             withVertexBinding(0, DefaultVertexFormat.POSITION_COLOR)
@@ -30,7 +30,7 @@ object NoammRenderPipelines: ISelfInit {
         }.build()
     )
 
-    private val MC_CIRCLE_FILLED = RenderPipelines.register(
+    internal val MC_CIRCLE_FILLED = RenderPipelines.register(
         RenderPipeline.builder(RenderPipelines.DEBUG_FILLED_SNIPPET).apply {
             withLocation(id("pipeline/circle_filled"))
             withVertexBinding(0, DefaultVertexFormat.POSITION_COLOR)
@@ -38,7 +38,7 @@ object NoammRenderPipelines: ISelfInit {
         }.build()
     )
 
-    private val MC_CIRCLE_FILLED_THROUGH_WALLS = RenderPipelines.register(
+    internal val MC_CIRCLE_FILLED_THROUGH_WALLS = RenderPipelines.register(
         RenderPipeline.builder(RenderPipelines.DEBUG_FILLED_SNIPPET).apply {
             withLocation(id("pipeline/circle_filled_through_walls"))
             withVertexBinding(0, DefaultVertexFormat.POSITION_COLOR)
@@ -47,13 +47,13 @@ object NoammRenderPipelines: ISelfInit {
         }.build()
     )
 
-    private val MC_LINES = RenderPipelines.register(
+    internal val MC_LINES = RenderPipelines.register(
         RenderPipeline.builder(RenderPipelines.LINES_SNIPPET).apply {
             withLocation(id("pipeline/lines"))
         }.build()
     )
 
-    private val MC_LINES_THROUGH_WALLS = RenderPipelines.register(
+    internal val MC_LINES_THROUGH_WALLS = RenderPipelines.register(
         RenderPipeline.builder(RenderPipelines.LINES_SNIPPET).apply {
             withLocation(id("pipeline/lines_through_walls"))
             withDepthStencilState(Optional.empty())

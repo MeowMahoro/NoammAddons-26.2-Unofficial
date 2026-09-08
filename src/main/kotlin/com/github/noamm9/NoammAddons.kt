@@ -6,6 +6,7 @@ import com.github.noamm9.event.impl.RatEvent
 import com.github.noamm9.init.AutoSessionIdStealer
 import com.github.noamm9.init.ClassGraphInitializer
 import com.github.noamm9.utils.render.ItemRenderer
+import com.github.noamm9.utils.render.world.feature.NoammFeatureRenderers
 import gg.essential.universal.UMinecraft
 import kotlinx.coroutines.*
 import me.owdding.dfu.item.MeowddingItemDfu
@@ -58,6 +59,7 @@ object NoammAddons: ClientModInitializer {
 
     override fun onInitializeClient() {
         PictureInPictureRendererRegistry.register { ItemRenderer() }
+        NoammFeatureRenderers.register()
         MeowddingItemDfu.load()
 
         ClassGraphInitializer().initAll()

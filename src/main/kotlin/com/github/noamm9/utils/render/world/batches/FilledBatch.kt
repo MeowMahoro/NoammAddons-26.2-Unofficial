@@ -39,10 +39,10 @@ data class FilledBatch(val pipeline: URenderPipeline, val mode: UGraphics.DrawMo
     }
 
     fun addQuad(pose: UMatrixStack, x1: Float, y1: Float, z1: Float, x2: Float, y2: Float, z2: Float, x3: Float, y3: Float, z3: Float, x4: Float, y4: Float, z4: Float, r: Float, g: Float, b: Float, a: Float) {
+        // 26.2's public filled pipelines are quad (QUADS topology) based, so store one 4-vertex
+        // quad per face instead of two triangles.
         vertex(pose, x1, y1, z1, r, g, b, a)
         vertex(pose, x2, y2, z2, r, g, b, a)
-        vertex(pose, x3, y3, z3, r, g, b, a)
-        vertex(pose, x1, y1, z1, r, g, b, a)
         vertex(pose, x3, y3, z3, r, g, b, a)
         vertex(pose, x4, y4, z4, r, g, b, a)
     }

@@ -157,11 +157,9 @@ object Render3D {
             val o2x = (outerR * c2).toFloat()
             val o2y = (outerR * s2).toFloat()
 
+            // Filled geometry is uploaded as 4-vertex quads on 26.2, so emit one quad per segment.
             buffer.vertex(pose, i1x, i1y, 0f, r, g, b, a)
             buffer.vertex(pose, o1x, o1y, 0f, r, g, b, a)
-            buffer.vertex(pose, o2x, o2y, 0f, r, g, b, a)
-
-            buffer.vertex(pose, i1x, i1y, 0f, r, g, b, a)
             buffer.vertex(pose, o2x, o2y, 0f, r, g, b, a)
             buffer.vertex(pose, i2x, i2y, 0f, r, g, b, a)
         }
